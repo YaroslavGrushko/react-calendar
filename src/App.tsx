@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-const GRID_SIZE = 42;
+const GRID_SIZE = 35;
 const DATES = new Array(GRID_SIZE).fill(null);
 
 const Wrapper = styled.section.attrs({
@@ -10,7 +10,8 @@ const Wrapper = styled.section.attrs({
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  padding: 20px 3% 20px;
+  padding: 20px 3%;
+  margin: auto;
   background: #eeeff1;
 `;
 
@@ -19,7 +20,7 @@ const Grid = styled.div.attrs({
 })`
   display: flex;
   width: 100%;
-  padding: 5px;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 5px;
 `;
@@ -27,7 +28,7 @@ const Cell = styled.div.attrs({
   className: `Cell`,
 })`
   position: relative;
-  width: 15.8%;
+  width: calc(97% / 7 - 2px);
   aspect-ratio: 1/1;
   border-radius: 3px;
   background: #e3e4e6;
@@ -37,7 +38,7 @@ const TaskSquare = styled.div.attrs({
   className: "TaskSquare",
 })`
   position: absolute;
-  width: 15.8%;
+  width: calc(90% / 7);
   aspect-ratio: 1/1;
   background: blue;
   border-radius: 3px;
@@ -46,20 +47,21 @@ const TaskSquare = styled.div.attrs({
 `;
 
 const App = () => {
-  const [taskSquarePosition, setTaskSquarePosition] = useState({ x: 0, y: 0 });
-
+  const [taskSquarePosition, setTaskSquarePosition] = useState({
+    x: 0,
+    y: -500,
+  });
   const [isDragging, setDragging] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent the default context menu
-
-    // Calculate the position of the task square based on the cell index
     const gridRect = e.currentTarget.getBoundingClientRect();
     const x = gridRect.left;
-    const y = gridRect.top;
+    const y = gridRect.top + window.scrollY;
 
     setTaskSquarePosition({ x, y });
   };
+
   const handleClickEvent = (event: React.MouseEvent) => {
     if (event.type === "mousedown") {
       setDragging(true);
@@ -71,16 +73,10 @@ const App = () => {
   const handleDrag = (e: React.MouseEvent) => {
     if (!isDragging) return;
 
-    // Calculate the position of the task square based on the mouse coordinates
-    // You may need to adjust these calculations based on your specific layout and requirements
-    const x = e.clientX;
-    const y = e.clientY;
+    const gridRect = e.currentTarget.getBoundingClientRect();
+    const x = gridRect.left;
+    const y = gridRect.top + window.scrollY;
 
-    // Perform logic to determine the cell index based on x, y coordinates
-    // ...
-
-    // Update the state or perform other actions based on the calculated cell index
-    // ...
     setTaskSquarePosition({ x, y });
   };
 
