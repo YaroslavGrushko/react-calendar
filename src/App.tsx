@@ -6,6 +6,12 @@ import { ContextMenuPosition, ContextMenu } from "./ContextMenu/ContextMenu";
 const GRID_SIZE = 35;
 const DATES = new Array(GRID_SIZE).fill(null);
 
+interface Square {
+  id: number;
+  x: number;
+  y: number;
+}
+
 const Wrapper = styled.section.attrs({
   className: `Wrapper`,
 })`
@@ -48,21 +54,25 @@ const TaskSquare = styled.div.attrs({
   user-select: none;
 `;
 
-const App = () => {
-  const [taskSquarePosition, setTaskSquarePosition] = useState({
-    x: 0,
-    y: -500,
-  });
+const App: React.FC = () => {
+  const [taskSquares, setTaskSquares] = useState<Square[]>([
+    { id: 1, x: 0, y: -500 },
+  ]);
   const [isDragging, setDragging] = useState(false);
-  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] =
-    useState<ContextMenuPosition>({
-      top: 0,
-      left: 0,
-    });
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const [currentCell, setCurrentCell] = useState({ x: 0, y: -500 });
+
+  // useEffect(() => {
+  //   localStorage.setItem("taskSquares", JSON.stringify(taskSquares));
+  // }, [taskSquares]);
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    const gridRect = e.currentTarget.getBoundingClientRect();
+    const cellX = gridRect.left;
+    const cellY = gridRect.top + window.scrollY;
+
     setContextMenuPosition({ top: e.clientY, left: e.clientX });
+    setCurrentCell({ x: cellX, y: cellY });
     setIsContextMenuOpen(true);
   };
 
@@ -74,14 +84,33 @@ const App = () => {
     }
   };
 
-  const handleDrag = (e: React.MouseEvent) => {
+  const handleDrag = (e: React.MouseEvent, index: number) => {
     if (!isDragging) return;
 
     const gridRect = e.currentTarget.getBoundingClientRect();
     const x = gridRect.left;
     const y = gridRect.top + window.scrollY;
 
-    setTaskSquarePosition({ x, y });
+    setTaskSquares((prevSquares) =>
+      prevSquares.map((square) =>
+        square.id === index ? { ...square, x, y } : square
+      )
+    );
+  };
+
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] =
+    useState<ContextMenuPosition>({
+      top: 0,
+      left: 0,
+    });
+
+  const onTaskCreate = (e: React.MouseEvent) => {
+    setIsContextMenuOpen(false);
+    setTaskSquares((prevSquares) => [
+      ...prevSquares,
+      { id: prevSquares.length + 1, x: currentCell.x, y: currentCell.y },
+    ]);
   };
 
   const handleContextMenuClose = () => {
@@ -96,23 +125,25 @@ const App = () => {
           <Cell
             key={index}
             onContextMenu={(e) => handleContextMenu(e)}
-            onMouseMove={handleDrag}
+            onMouseMove={(e) => handleDrag(e, index)}
           >
             {value}
           </Cell>
         ))}
-        {taskSquarePosition && (
+        {taskSquares.map((square) => (
           <TaskSquare
-            style={{ left: taskSquarePosition.x, top: taskSquarePosition.y }}
+            key={square.id}
+            style={{ left: square.x, top: square.y }}
             onMouseDown={(e) => handleClickEvent(e)}
             onMouseUp={(e) => handleClickEvent(e)}
           />
-        )}
+        ))}
       </Grid>
 
       {isContextMenuOpen && (
         <ContextMenu
           position={contextMenuPosition}
+          onCreate={(e) => onTaskCreate(e)}
           onClose={handleContextMenuClose}
         />
       )}

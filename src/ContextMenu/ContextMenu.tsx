@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 interface ContextMenuProps {
   position: ContextMenuPosition;
+  onCreate: React.MouseEventHandler<HTMLDivElement>;
   onClose: React.MouseEventHandler<HTMLDivElement>;
 }
 
@@ -34,10 +35,10 @@ export const ContextMenuItem = styled.div`
   }
 `;
 export const ContextMenu = (props: ContextMenuProps) => {
-  const { position, onClose } = props;
+  const { position, onCreate, onClose } = props;
   return (
     <ContextMenuStyled top={position.top} left={position.left}>
-      <ContextMenuItem onClick={onClose}>Create Task</ContextMenuItem>
+      <ContextMenuItem onClick={onCreate}>Create Task</ContextMenuItem>
       <ContextMenuItem onClick={onClose}>Labels</ContextMenuItem>
       <ContextMenuItem onClick={onClose}>Close</ContextMenuItem>
     </ContextMenuStyled>
