@@ -6,7 +6,13 @@ import { ContextMenuPosition, ContextMenu } from "./ContextMenu/ContextMenu";
 const GRID_SIZE = 35;
 const DATES = new Array(GRID_SIZE).fill(null);
 
-interface Square {
+interface Task {
+  id: number;
+  cell_id?: number;
+  x?: number;
+  y?: number;
+}
+interface Cell {
   id: number;
   x: number;
   y: number;
@@ -55,47 +61,66 @@ const TaskSquare = styled.div.attrs({
 `;
 
 const App: React.FC = () => {
-  const [taskSquares, setTaskSquares] = useState<Square[]>([
-    { id: 1, x: 0, y: -500 },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isDragging, setDragging] = useState(false);
-  const [currentCell, setCurrentCell] = useState({ x: 0, y: -500 });
+  const [currentCell, setCurrentCell] = useState<Cell>();
+  const [currentTask, setCurrentTask] = useState<Task>();
 
   // useEffect(() => {
   //   localStorage.setItem("taskSquares", JSON.stringify(taskSquares));
   // }, [taskSquares]);
 
-  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleContextMenu = (
+    e: React.MouseEvent<HTMLDivElement>,
+    index: number
+  ) => {
     e.preventDefault();
     const gridRect = e.currentTarget.getBoundingClientRect();
     const cellX = gridRect.left;
     const cellY = gridRect.top + window.scrollY;
 
     setContextMenuPosition({ top: e.clientY, left: e.clientX });
-    setCurrentCell({ x: cellX, y: cellY });
+    setCurrentCell({ id: index, x: cellX, y: cellY });
     setIsContextMenuOpen(true);
   };
 
-  const handleClickEvent = (event: React.MouseEvent) => {
-    if (event.type === "mousedown") {
-      setDragging(true);
-    } else {
-      setDragging(false);
-    }
+  const onTaskCreate = (e: React.MouseEvent) => {
+    setIsContextMenuOpen(false);
+    if (!currentCell) return;
+
+    setTasks((prevCells) => [
+      ...prevCells,
+      {
+        id: prevCells.length + 1,
+        cell_id: currentCell.id,
+        x: currentCell.x,
+        y: currentCell.y,
+      },
+    ]);
   };
 
-  const handleDrag = (e: React.MouseEvent, index: number) => {
-    if (!isDragging) return;
+  const handleDrag = (e: React.MouseEvent) => {
+    if (!isDragging || !currentCell || !currentTask) return;
 
     const gridRect = e.currentTarget.getBoundingClientRect();
     const x = gridRect.left;
     const y = gridRect.top + window.scrollY;
+    const cell_id = currentCell.id;
 
-    setTaskSquares((prevSquares) =>
-      prevSquares.map((square) =>
-        square.id === index ? { ...square, x, y } : square
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === currentTask.id ? { ...task, cell_id, x, y } : task
       )
     );
+  };
+
+  const handleClickEvent = (event: React.MouseEvent, task_id?: number) => {
+    if (event.type === "mousedown" && task_id) {
+      setCurrentTask({ id: task_id });
+      setDragging(true);
+    } else {
+      setDragging(false);
+    }
   };
 
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
@@ -104,14 +129,6 @@ const App: React.FC = () => {
       top: 0,
       left: 0,
     });
-
-  const onTaskCreate = (e: React.MouseEvent) => {
-    setIsContextMenuOpen(false);
-    setTaskSquares((prevSquares) => [
-      ...prevSquares,
-      { id: prevSquares.length + 1, x: currentCell.x, y: currentCell.y },
-    ]);
-  };
 
   const handleContextMenuClose = () => {
     setIsContextMenuOpen(false);
@@ -124,17 +141,17 @@ const App: React.FC = () => {
         {DATES.map((value, index) => (
           <Cell
             key={index}
-            onContextMenu={(e) => handleContextMenu(e)}
-            onMouseMove={(e) => handleDrag(e, index)}
+            onContextMenu={(e) => handleContextMenu(e, index)}
+            onMouseMove={(e) => handleDrag(e)}
           >
             {value}
           </Cell>
         ))}
-        {taskSquares.map((square) => (
+        {tasks.map((tasks) => (
           <TaskSquare
-            key={square.id}
-            style={{ left: square.x, top: square.y }}
-            onMouseDown={(e) => handleClickEvent(e)}
+            key={tasks.id}
+            style={{ left: tasks.x, top: tasks.y }}
+            onMouseDown={(e) => handleClickEvent(e, tasks.id)}
             onMouseUp={(e) => handleClickEvent(e)}
           />
         ))}
