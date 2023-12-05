@@ -8,12 +8,10 @@ const DATES = new Array(GRID_SIZE).fill(null);
 
 interface Task {
   id: number;
-  cell_id?: number;
   x?: number;
   y?: number;
 }
 interface Cell {
-  id: number;
   x: number;
   y: number;
 }
@@ -70,29 +68,25 @@ const App: React.FC = () => {
   //   localStorage.setItem("taskSquares", JSON.stringify(taskSquares));
   // }, [taskSquares]);
 
-  const handleContextMenu = (
-    e: React.MouseEvent<HTMLDivElement>,
-    index: number
-  ) => {
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const gridRect = e.currentTarget.getBoundingClientRect();
     const cellX = gridRect.left;
     const cellY = gridRect.top + window.scrollY;
 
     setContextMenuPosition({ top: e.clientY, left: e.clientX });
-    setCurrentCell({ id: index, x: cellX, y: cellY });
+    setCurrentCell({ x: cellX, y: cellY });
     setIsContextMenuOpen(true);
   };
 
-  const onTaskCreate = (e: React.MouseEvent) => {
+  const onTaskCreate = () => {
     setIsContextMenuOpen(false);
     if (!currentCell) return;
 
-    setTasks((prevCells) => [
-      ...prevCells,
+    setTasks((prevTasks) => [
+      ...prevTasks,
       {
-        id: prevCells.length + 1,
-        cell_id: currentCell.id,
+        id: prevTasks.length + 1,
         x: currentCell.x,
         y: currentCell.y,
       },
@@ -100,16 +94,15 @@ const App: React.FC = () => {
   };
 
   const handleDrag = (e: React.MouseEvent) => {
-    if (!isDragging || !currentCell || !currentTask) return;
+    if (!isDragging || !currentTask) return;
 
     const gridRect = e.currentTarget.getBoundingClientRect();
     const x = gridRect.left;
     const y = gridRect.top + window.scrollY;
-    const cell_id = currentCell.id;
 
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
-        task.id === currentTask.id ? { ...task, cell_id, x, y } : task
+        task.id === currentTask.id ? { ...task, x, y } : task
       )
     );
   };
@@ -160,7 +153,7 @@ const App: React.FC = () => {
       {isContextMenuOpen && (
         <ContextMenu
           position={contextMenuPosition}
-          onCreate={(e) => onTaskCreate(e)}
+          onCreate={onTaskCreate}
           onClose={handleContextMenuClose}
         />
       )}
