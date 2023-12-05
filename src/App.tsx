@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
+import { ContextMenuPosition, ContextMenu } from "./ContextMenu/ContextMenu";
+
 const GRID_SIZE = 35;
 const DATES = new Array(GRID_SIZE).fill(null);
 
@@ -52,14 +54,16 @@ const App = () => {
     y: -500,
   });
   const [isDragging, setDragging] = useState(false);
-
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] =
+    useState<ContextMenuPosition>({
+      top: 0,
+      left: 0,
+    });
   const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent the default context menu
-    const gridRect = e.currentTarget.getBoundingClientRect();
-    const x = gridRect.left;
-    const y = gridRect.top + window.scrollY;
-
-    setTaskSquarePosition({ x, y });
+    e.preventDefault();
+    setContextMenuPosition({ top: e.clientY, left: e.clientX });
+    setIsContextMenuOpen(true);
   };
 
   const handleClickEvent = (event: React.MouseEvent) => {
@@ -78,6 +82,10 @@ const App = () => {
     const y = gridRect.top + window.scrollY;
 
     setTaskSquarePosition({ x, y });
+  };
+
+  const handleContextMenuClose = () => {
+    setIsContextMenuOpen(false);
   };
 
   return (
@@ -101,6 +109,13 @@ const App = () => {
           />
         )}
       </Grid>
+
+      {isContextMenuOpen && (
+        <ContextMenu
+          position={contextMenuPosition}
+          onClose={handleContextMenuClose}
+        />
+      )}
     </Wrapper>
   );
 };
